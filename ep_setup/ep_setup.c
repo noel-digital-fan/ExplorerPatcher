@@ -1,3 +1,4 @@
+// Explorer Patcher Plus: modified by noel-digital-fan on 2026-11-19; original notices retained.
 #include <Windows.h>
 #pragma comment(linker,"\"/manifestdependency:type='win32' \
 name='Microsoft.Windows.Common-Controls' version='6.0.0.0' \
@@ -84,7 +85,7 @@ BOOL SetupShortcut(BOOL bInstall, WCHAR* wszPath, WCHAR* wszArguments)
     wcscat_s(wszStartPrograms, MAX_PATH, L"\\");
     wcscat_s(wszStartPrograms, MAX_PATH, wszTitle);
     wcscat_s(wszStartPrograms, MAX_PATH, L" (");
-    wcscat_s(wszStartPrograms, MAX_PATH, _T(PRODUCT_NAME) L").lnk");
+    wcscat_s(wszStartPrograms, MAX_PATH, _T(PRODUCT_DISPLAY_NAME) L").lnk");
     ZeroMemory(wszExplorerPath, MAX_PATH);
     GetSystemDirectoryW(wszExplorerPath, MAX_PATH);
     wcscat_s(wszExplorerPath, MAX_PATH, L"\\shell32.dll");
@@ -100,7 +101,7 @@ BOOL SetupShortcut(BOOL bInstall, WCHAR* wszPath, WCHAR* wszArguments)
                 pShellLink->lpVtbl->SetIconLocation(pShellLink, wszExplorerPath, 40 - 1);
                 PathRemoveFileSpecW(wszExplorerPath);
                 pShellLink->lpVtbl->SetWorkingDirectory(pShellLink, wszExplorerPath);
-                pShellLink->lpVtbl->SetDescription(pShellLink, _T(PRODUCT_NAME));
+                pShellLink->lpVtbl->SetDescription(pShellLink, _T(PRODUCT_DISPLAY_NAME));
 
                 IPersistFile* pPersistFile = NULL;
                 if (SUCCEEDED(pShellLink->lpVtbl->QueryInterface(pShellLink, &IID_IPersistFile, &pPersistFile)))
@@ -164,8 +165,8 @@ BOOL SetupUninstallEntry(BOOL bInstall, WCHAR* wszPath)
                         L"DisplayName",
                         0,
                         REG_SZ,
-                        (const BYTE*)_T(PRODUCT_NAME),
-                        (DWORD)(wcslen(_T(PRODUCT_NAME)) + 1) * sizeof(wchar_t)
+                        (const BYTE*)_T(PRODUCT_DISPLAY_NAME),
+                        (DWORD)(wcslen(_T(PRODUCT_DISPLAY_NAME)) + 1) * sizeof(wchar_t)
                     );
                 }
                 if (!dwLastError)
@@ -968,7 +969,7 @@ int WINAPI wWinMain(
                     WCHAR szMessage[256];
                     szMessage[0] = 0;
                     _swprintf_p(szMessage, ARRAYSIZE(szMessage), szFormat, L"ARM64", L"x64");
-                    MessageBoxW(NULL, szMessage, _T(PRODUCT_NAME), MB_OK | MB_ICONERROR);
+                    MessageBoxW(NULL, szMessage, _T(PRODUCT_DISPLAY_NAME), MB_OK | MB_ICONERROR);
                 }
                 exit(0);
             }
@@ -1000,7 +1001,7 @@ int WINAPI wWinMain(
         wchar_t mbText[256];
         mbText[0] = 0;
         LoadStringW(hInstance, IDS_SETUP_UNINSTALL_PROMPT, mbText, ARRAYSIZE(mbText));
-        if (MessageBoxW(NULL, mbText, _T(PRODUCT_NAME), MB_YESNO | MB_DEFBUTTON2 | MB_ICONQUESTION) == IDNO)
+        if (MessageBoxW(NULL, mbText, _T(PRODUCT_DISPLAY_NAME), MB_YESNO | MB_DEFBUTTON2 | MB_ICONQUESTION) == IDNO)
         {
             exit(0);
         }
@@ -1044,7 +1045,7 @@ int WINAPI wWinMain(
         wchar_t mbText[256];
         mbText[0] = 0;
         LoadStringW(hInstance, bInstall ? IDS_SETUP_INSTALL_LOGOFF : IDS_SETUP_UNINSTALL_LOGOFF, mbText, ARRAYSIZE(mbText));
-        if (MessageBoxW(NULL, mbText, _T(PRODUCT_NAME), MB_YESNO | MB_DEFBUTTON1 | MB_ICONQUESTION) == IDYES)
+        if (MessageBoxW(NULL, mbText, _T(PRODUCT_DISPLAY_NAME), MB_YESNO | MB_DEFBUTTON1 | MB_ICONQUESTION) == IDYES)
         {
             RegDeleteKeyValueW(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Shell\\Update\\Packages", L"UndockingDisabled");
         }
@@ -1314,6 +1315,8 @@ int WINAPI wWinMain(
                 }
             }
         }
+        if (CHECK_OK(bOk)) bOk = InstallResource(bInstall, hInstance, zipFile, "LICENSE", wszPath, L"LICENSE");
+        if (CHECK_OK(bOk)) bOk = InstallResource(bInstall, hInstance, zipFile, "README.md", wszPath, L"README.md");
         if (CHECK_OK(bOk)) bOk = InstallResource(bInstall, hInstance, zipFile, PRODUCT_NAME ".IA-32.dll", wszPath, _T(PRODUCT_NAME) L".IA-32.dll");
 #if defined(_M_X64)
         if (CHECK_OK(bOk)) bOk = InstallResource(bInstall, hInstance, zipFile, PRODUCT_NAME ".amd64.dll", wszPath, _T(PRODUCT_NAME) L".amd64.dll");
@@ -1678,7 +1681,7 @@ int WINAPI wWinMain(
                 if (bWasShellExt)
                 {
                     LoadStringW(hInstance, IDS_SETUP_UNINSTALL_RESTART, mbText, ARRAYSIZE(mbText));
-                    if (MessageBoxW(NULL, mbText, _T(PRODUCT_NAME), MB_YESNO | MB_DEFBUTTON1 | MB_ICONQUESTION) == IDYES)
+                    if (MessageBoxW(NULL, mbText, _T(PRODUCT_DISPLAY_NAME), MB_YESNO | MB_DEFBUTTON1 | MB_ICONQUESTION) == IDYES)
                     {
                         SystemShutdown(TRUE);
                     }
@@ -1686,7 +1689,7 @@ int WINAPI wWinMain(
                 else
                 {
                     LoadStringW(hInstance, IDS_SETUP_UNINSTALL_FINISH, mbText, ARRAYSIZE(mbText));
-                    MessageBoxW(NULL, mbText, _T(PRODUCT_NAME), MB_ICONASTERISK | MB_OK | MB_DEFBUTTON1);
+                    MessageBoxW(NULL, mbText, _T(PRODUCT_DISPLAY_NAME), MB_ICONASTERISK | MB_OK | MB_DEFBUTTON1);
                 }
             }
             else
@@ -1736,7 +1739,7 @@ int WINAPI wWinMain(
             wchar_t szDblNewlineAndLineNumber[32];
             swprintf_s(szDblNewlineAndLineNumber, ARRAYSIZE(szDblNewlineAndLineNumber), L"\n\n%d", g_uFailureLine);
             wcscat_s(mbText, ARRAYSIZE(mbText), szDblNewlineAndLineNumber);
-            MessageBoxW(NULL, mbText, _T(PRODUCT_NAME), MB_ICONERROR | MB_OK | MB_DEFBUTTON1);
+            MessageBoxW(NULL, mbText, _T(PRODUCT_DISPLAY_NAME), MB_ICONERROR | MB_OK | MB_DEFBUTTON1);
         }
         if (bOk && bIsUndockingDisabled)
         {

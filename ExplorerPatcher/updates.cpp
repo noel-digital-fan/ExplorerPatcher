@@ -1,4 +1,5 @@
-﻿#include "updates.h"
+﻿// Explorer Patcher Plus: modified by noel-digital-fan on 2026-11-19; original notices retained.
+#include "updates.h"
 
 #include <Shlwapi.h>
 #pragma comment(lib, "Shlwapi.lib")
@@ -567,7 +568,7 @@ BOOL IsUpdateAvailableHelper(
                 BOOL bRet = CreateDirectoryW(wszPath, nullptr);
                 if (bRet || (!bRet && GetLastError() == ERROR_ALREADY_EXISTS))
                 {
-                    wcscat_s(wszPath, MAX_PATH, L"\\Update for " _T(PRODUCT_NAME) L" from ");
+                    wcscat_s(wszPath, MAX_PATH, L"\\Update for " _T(PRODUCT_DISPLAY_NAME) L" from ");
                     WCHAR wszURL[MAX_PATH] = {};
                     wcscpy_s(wszURL, MAX_PATH, hstrDownloadUrl.GetRawBuffer(nullptr));
                     if (wszURL[97]) // Truncate the URL for display
@@ -603,15 +604,8 @@ BOOL IsUpdateAvailableHelper(
                     BOOL bRet = DeleteFileW(wszPath);
                     if (bRet || (!bRet && GetLastError() == ERROR_FILE_NOT_FOUND))
                     {
-                        DWORD bIsUsingEpMake = 0, dwSize = sizeof(DWORD);
-                        RegGetValueW(HKEY_CURRENT_USER, TEXT(REGPATH), L"UpdateUseLocal", RRF_RT_DWORD, nullptr, &bIsUsingEpMake, &dwSize);
-                        if (bIsUsingEpMake) {
-                            GetSystemDirectoryW(wszPath, MAX_PATH);
-                            wcscat_s(wszPath, MAX_PATH, L"\\WindowsPowerShell\\v1.0\\powershell.exe");
-                        }
-
                         FILE* f = nullptr;
-                        if (!bIsUsingEpMake && !_wfopen_s(
+                        if (!_wfopen_s(
                             &f,
                             wszPath,
                             L"wb"
@@ -664,13 +658,13 @@ BOOL IsUpdateAvailableHelper(
                             }
                             fclose(f);
                         }
-                        if (bIsUsingEpMake || bIsUpdateAvailable)
+                        if (bIsUpdateAvailable)
                         {
                             bIsUpdateAvailable = FALSE;
 #ifdef UPDATES_VERBOSE_OUTPUT
                             printf(
                                 "[Updates] In order to install this update for the product \""
-                                PRODUCT_NAME
+                                PRODUCT_DISPLAY_NAME
                                 "\", please allow the request.\n"
                             );
 #endif
@@ -743,7 +737,7 @@ BOOL IsUpdateAvailableHelper(
                                 if (MessageBoxW(
                                     FindWindowW(L"ExplorerPatcher_GUI_" _T(EP_CLSID), nullptr),
                                     wszMsg,
-                                    _T(PRODUCT_NAME),
+                                    _T(PRODUCT_DISPLAY_NAME),
                                     MB_YESNO | MB_DEFBUTTON2 | MB_ICONQUESTION
                                 ) == IDNO)
                                 {
@@ -756,9 +750,9 @@ BOOL IsUpdateAvailableHelper(
                             ShExecInfo.cbSize = sizeof(ShExecInfo);
                             ShExecInfo.fMask = SEE_MASK_NOCLOSEPROCESS;
                             ShExecInfo.hwnd = nullptr;
-                            ShExecInfo.lpVerb = bIsUsingEpMake ? L"open" : L"runas";
+                            ShExecInfo.lpVerb = L"runas";
                             ShExecInfo.lpFile = wszPath;
-                            ShExecInfo.lpParameters = bIsUsingEpMake ? L"iex (irm 'https://raw.githubusercontent.com/valinet/ep_make/master/ep_make_safe.ps1')" : L"/update_silent";
+                            ShExecInfo.lpParameters = L"/update_silent";
                             ShExecInfo.lpDirectory = nullptr;
                             ShExecInfo.nShow = SW_SHOW;
                             ShExecInfo.hInstApp = nullptr;
@@ -816,6 +810,39 @@ BOOL IsUpdateAvailableHelper(
     return bIsUpdateAvailable;
 }
 
+// Also migrate an explicitly saved official URL, so installing this fork cannot
+// silently switch back to an official build and discard the fork's changes.
+static void ReadUpdateURL(HKEY hKey, BOOL bStaging, WCHAR* url, DWORD cchUrl)
+{
+    url[0] = 0;
+    if (hKey)
+    {
+        DWORD cbUrl = cchUrl * sizeof(WCHAR);
+        RegGetValueW(hKey, nullptr, bStaging ? L"UpdateURLStaging" : L"UpdateURL",
+            RRF_RT_REG_SZ | RRF_ZEROONFAILURE, nullptr, url, &cbUrl);
+    }
+
+    const WCHAR* officialPrefixes[] = {
+        L"https://github.com/valinet/ExplorerPatcher",
+        L"https://api.github.com/repos/valinet/ExplorerPatcher"
+    };
+    BOOL bOfficial = FALSE;
+    for (const WCHAR* prefix : officialPrefixes)
+    {
+        size_t length = wcslen(prefix);
+        if (!_wcsnicmp(url, prefix, length) &&
+            (!url[length] || url[length] == L'/' || url[length] == L'?' || url[length] == L'#'))
+        {
+            bOfficial = TRUE;
+            break;
+        }
+    }
+    if (!url[0] || bOfficial)
+    {
+        wcscpy_s(url, cchUrl, bStaging ? _T(UPDATES_RELEASE_INFO_URL_STAGING) : _T(UPDATES_RELEASE_INFO_URL_STABLE));
+    }
+}
+
 BOOL IsUpdateAvailable(LPCWSTR wszDataStore, char* szCheckAgainst, BOOL* lpFail, WCHAR* wszInfoURL, DWORD cchInfoURL, HMODULE hModule,
     DWORD* pLeftMost, DWORD* pSecondLeft, DWORD* pSecondRight, DWORD* pRightMost)
 {
@@ -848,36 +875,10 @@ BOOL IsUpdateAvailable(LPCWSTR wszDataStore, char* szCheckAgainst, BOOL* lpFail,
     }
     if (hKey)
     {
-        dwSize = sizeof(szUpdateURL);
-        RegQueryValueExW(
-            hKey,
-            L"UpdateURL",
-            nullptr,
-            nullptr,
-            (LPBYTE)szUpdateURL,
-            &dwSize
-        );
-        if (dwSize == sizeof(WCHAR) && szUpdateURL[0] == 0)
-        {
-            wcscat_s(szUpdateURL, MAX_PATH, _T(UPDATES_RELEASE_INFO_URL_STABLE));
-        }
-        wcscat_s(szUpdateURL, MAX_PATH, _T("/download/"));
-        wcscat_s(szUpdateURL, MAX_PATH, _T(SETUP_UTILITY_NAME));
+        ReadUpdateURL(hKey, FALSE, szUpdateURL, ARRAYSIZE(szUpdateURL));
         if (wszInfoURL)
         {
-            dwSize = sizeof(WCHAR) * cchInfoURL;
-            RegQueryValueExW(
-                hKey,
-                L"UpdateURL",
-                nullptr,
-                nullptr,
-                (LPBYTE)wszInfoURL,
-                &dwSize
-            );
-            if (dwSize == sizeof(WCHAR) && wszInfoURL[0] == 0)
-            {
-                wcscat_s(wszInfoURL, cchInfoURL, _T(UPDATES_RELEASE_INFO_URL_STABLE));
-            }
+            wcscpy_s(wszInfoURL, cchInfoURL, szUpdateURL);
         }
         dwSize = sizeof(DWORD);
         RegQueryValueExW(
@@ -899,23 +900,14 @@ BOOL IsUpdateAvailable(LPCWSTR wszDataStore, char* szCheckAgainst, BOOL* lpFail,
         );
         if (bUpdatePreferStaging)
         {
-            szUpdateURL[0] = 0;
-            wcscat_s(szUpdateURL, MAX_PATH, _T(UPDATES_RELEASE_INFO_URL_STAGING));
-            dwSize = sizeof(szUpdateURL);
-            RegQueryValueExW(
-                hKey,
-                L"UpdateURLStaging",
-                nullptr,
-                nullptr,
-                (LPBYTE)szUpdateURL,
-                &dwSize
-            );
-            if (dwSize == sizeof(WCHAR) && szUpdateURL[0] == 0)
-            {
-                wcscat_s(szUpdateURL, MAX_PATH, _T(UPDATES_RELEASE_INFO_URL_STAGING));
-            }
+            ReadUpdateURL(hKey, TRUE, szUpdateURL, ARRAYSIZE(szUpdateURL));
         }
         RegCloseKey(hKey);
+    }
+    if (!bUpdatePreferStaging)
+    {
+        wcscat_s(szUpdateURL, MAX_PATH, _T("/download/"));
+        wcscat_s(szUpdateURL, MAX_PATH, _T(SETUP_UTILITY_NAME));
     }
 #ifdef UPDATES_VERBOSE_OUTPUT
     wprintf(L"[Updates] Update URL: %s\n", szUpdateURL);
@@ -964,21 +956,7 @@ BOOL UpdateProduct(LPCWSTR wszDataStore, CToastData* toastData, BOOL bNoConfirma
     }
     if (hKey)
     {
-        dwSize = sizeof(szUpdateURL);
-        RegQueryValueExW(
-            hKey,
-            L"UpdateURL",
-            nullptr,
-            nullptr,
-            (LPBYTE)szUpdateURL,
-            &dwSize
-        );
-        if (dwSize == sizeof(WCHAR) && szUpdateURL[0] == 0)
-        {
-            wcscat_s(szUpdateURL, MAX_PATH, _T(UPDATES_RELEASE_INFO_URL_STABLE));
-        }
-        wcscat_s(szUpdateURL, MAX_PATH, _T("/download/"));
-        wcscat_s(szUpdateURL, MAX_PATH, _T(SETUP_UTILITY_NAME));
+        ReadUpdateURL(hKey, FALSE, szUpdateURL, ARRAYSIZE(szUpdateURL));
         dwSize = sizeof(DWORD);
         RegQueryValueExW(
             hKey,
@@ -999,23 +977,14 @@ BOOL UpdateProduct(LPCWSTR wszDataStore, CToastData* toastData, BOOL bNoConfirma
         );
         if (bUpdatePreferStaging)
         {
-            szUpdateURL[0] = 0;
-            wcscat_s(szUpdateURL, MAX_PATH, _T(UPDATES_RELEASE_INFO_URL_STAGING));
-            dwSize = sizeof(szUpdateURL);
-            RegQueryValueExW(
-                hKey,
-                L"UpdateURLStaging",
-                nullptr,
-                nullptr,
-                (LPBYTE)szUpdateURL,
-                &dwSize
-            );
-            if (dwSize == sizeof(WCHAR) && szUpdateURL[0] == 0)
-            {
-                wcscat_s(szUpdateURL, MAX_PATH, _T(UPDATES_RELEASE_INFO_URL_STAGING));
-            }
+            ReadUpdateURL(hKey, TRUE, szUpdateURL, ARRAYSIZE(szUpdateURL));
         }
         RegCloseKey(hKey);
+    }
+    if (!bUpdatePreferStaging)
+    {
+        wcscat_s(szUpdateURL, MAX_PATH, _T("/download/"));
+        wcscat_s(szUpdateURL, MAX_PATH, _T(SETUP_UTILITY_NAME));
     }
 #ifdef UPDATES_VERBOSE_OUTPUT
     wprintf(L"[Updates] Update URL: %s\n", szUpdateURL);
@@ -1054,7 +1023,7 @@ BOOL ShowUpdateSuccessNotification(HMODULE hModule, CToastData* toastData)
         L"		<binding template=\"ToastGeneric\">\r\n"
         L"			<text><![CDATA[%s]]></text>\r\n"
         L"			<text><![CDATA[%s]]></text>\r\n"
-        L"			<text placement=\"attribution\"><![CDATA[ExplorerPatcher]]></text>\r\n%s" // <-- Progress bar goes here
+        L"			<text placement=\"attribution\"><![CDATA[Explorer Patcher Plus]]></text>\r\n%s" // <-- Progress bar goes here
         L"		</binding>\r\n"
         L"	</visual>\r\n"
         L"	<audio src=\"ms-winsoundevent:Notification.Default\" loop=\"false\" silent=\"false\"/>\r\n%s" // <-- Buttons go here
@@ -1130,7 +1099,7 @@ BOOL InstallUpdatesIfAvailable(
         L"		<binding template=\"ToastGeneric\">\r\n"
         L"			<text><![CDATA[%s]]></text>\r\n"
         L"			<text><![CDATA[%s]]></text>\r\n"
-        L"			<text placement=\"attribution\"><![CDATA[ExplorerPatcher]]></text>\r\n%s" // <-- Progress bar goes here
+        L"			<text placement=\"attribution\"><![CDATA[Explorer Patcher Plus]]></text>\r\n%s" // <-- Progress bar goes here
         L"		</binding>\r\n"
         L"	</visual>\r\n"
         L"	<audio src=\"ms-winsoundevent:Notification.Default\" loop=\"false\" silent=\"false\"/>\r\n%s" // <-- Buttons go here

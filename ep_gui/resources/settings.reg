@@ -1,4 +1,5 @@
 ﻿Windows Registry Editor Version 5.00
+; Explorer Patcher Plus: modified by noel-digital-fan on 2026-11-19; original notices retained.
 
 
 ;M Settings
@@ -704,23 +705,21 @@
 "UpdatePreferStaging"=dword:00000000
 ;b %R:1807%
 "UpdateAllowDowngrades"=dword:00000000
-;b %R:1817%
-"UpdateUseLocal"=dword:00000000
 ;t %R:1808%
 ;w %R:1809%
 ;%R:1810%
-;github.com/valinet/ExplorerPatcher/releases/latest
+;github.com/noel-digital-fan/ExplorerPatcher/releases/latest
 "UpdateURL"=""
 ;w %R:1811%
 ;%R:1812%
-;api.github.com/repos/valinet/ExplorerPatcher/releases?per_page=1
+;api.github.com/repos/noel-digital-fan/ExplorerPatcher/releases?per_page=1
 "UpdateURLStaging"=""
 ;y %R:1813%
 ;;;EP_CHECK_FOR_UPDATES
 ;y %R:1814%
 ;;;EP_INSTALL_UPDATES
 ;y %R:1815% 🡕
-;https://github.com/valinet/ExplorerPatcher/blob/master/CHANGELOG.md
+;https://github.com/noel-digital-fan/ExplorerPatcher/blob/master/CHANGELOG.md
 ;y %R:1816% 🡕
 ;https://github.com/valinet/ExplorerPatcher/wiki/Configure-updates
 

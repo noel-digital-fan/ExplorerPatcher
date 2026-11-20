@@ -1,3 +1,4 @@
+// Explorer Patcher Plus: modified by noel-digital-fan on 2026-11-19; original notices retained.
 #include <initguid.h>
 DEFINE_GUID(LiveSetting_Property_GUID, 0xc12bcd8e, 0x2a8e, 0x4950, 0x8a, 0xe7, 0x36, 0x25, 0x11, 0x1d, 0x58, 0xeb);
 #include <oleacc.h>
@@ -123,7 +124,7 @@ void PlayHelpMessage(GUI* _this)
     swprintf_s(
         wszAccText,
         1000,
-        L"Welcome to ExplorerPatcher. "
+        L"Welcome to " _T(PRODUCT_DISPLAY_NAME) L". "
         L"Selected page is: %s: %d of %d. "
         L"To switch pages, press the Left or Right arrow keys or press a number (%d to %d). "
         L"To select an item, press the Up or Down arrow keys or Shift+Tab and Tab. "
@@ -2207,7 +2208,7 @@ static BOOL GUI_Build(HDC hDC, HWND hwnd, POINT pt)
                             }
                             else if (!strncmp(line + 1, "uninstall", 9))
                             {
-                                HWND hwndExistingMb = FindWindowExW(NULL, NULL, L"#32770", _T(PRODUCT_NAME));
+                                HWND hwndExistingMb = FindWindowExW(NULL, NULL, L"#32770", _T(PRODUCT_DISPLAY_NAME));
                                 if (hwndExistingMb)
                                 {
                                     SwitchToThisWindow(hwndExistingMb, TRUE);
@@ -2238,7 +2239,7 @@ static BOOL GUI_Build(HDC hDC, HWND hwnd, POINT pt)
                                 wchar_t mbText[512];
                                 mbText[0] = 0;
                                 LoadStringW(hModule, IDS_WEATHER_CLEAR_PROMPT, mbText, ARRAYSIZE(mbText));
-                                if (MessageBoxW(hwnd, mbText, _T(PRODUCT_NAME), MB_ICONQUESTION | MB_YESNO) == IDYES)
+                                if (MessageBoxW(hwnd, mbText, _T(PRODUCT_DISPLAY_NAME), MB_ICONQUESTION | MB_YESNO) == IDYES)
                                 {
                                     DWORD dwData = 0, dwVal = 0, dwSize = sizeof(DWORD);
                                     GUI_Internal_RegQueryValueExW(NULL, L"Virtualized_" _T(EP_CLSID) L"_PeopleBand", NULL, NULL, &dwData, &dwSize);
@@ -2252,7 +2253,7 @@ static BOOL GUI_Build(HDC hDC, HWND hwnd, POINT pt)
                                         PleaseWaitHook = SetWindowsHookExW(WH_CALLWNDPROC, PleaseWait_HookProc, NULL, GetCurrentThreadId());
                                         mbText[0] = 0;
                                         LoadStringW(hModule, IDS_WEATHER_CLEAR_WAIT, mbText, ARRAYSIZE(mbText));
-                                        MessageBoxW(hwnd, mbText, _T(PRODUCT_NAME), 0);
+                                        MessageBoxW(hwnd, mbText, _T(PRODUCT_DISPLAY_NAME), 0);
                                     }
                                     else
                                     {
@@ -2262,7 +2263,7 @@ static BOOL GUI_Build(HDC hDC, HWND hwnd, POINT pt)
                                     {
                                         mbText[0] = 0;
                                         LoadStringW(hModule, IDS_WEATHER_CLEAR_SUCCESS, mbText, ARRAYSIZE(mbText));
-                                        MessageBoxW(hwnd, mbText, _T(PRODUCT_NAME), MB_ICONINFORMATION);
+                                        MessageBoxW(hwnd, mbText, _T(PRODUCT_DISPLAY_NAME), MB_ICONINFORMATION);
                                     }
                                     else
                                     {
@@ -2270,7 +2271,7 @@ static BOOL GUI_Build(HDC hDC, HWND hwnd, POINT pt)
                                         {
                                             mbText[0] = 0;
                                             LoadStringW(hModule, IDS_WEATHER_CLEAR_FAILED, mbText, ARRAYSIZE(mbText));
-                                            MessageBoxW(hwnd, mbText, _T(PRODUCT_NAME), MB_ICONERROR);
+                                            MessageBoxW(hwnd, mbText, _T(PRODUCT_DISPLAY_NAME), MB_ICONERROR);
                                         }
                                     }
                                     if (dwData)

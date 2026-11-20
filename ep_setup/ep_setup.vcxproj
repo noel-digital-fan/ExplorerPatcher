@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Explorer Patcher Plus: modified by noel-digital-fan on 2026-11-19; original notices retained. -->
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -273,6 +274,8 @@
   </ItemGroup>
   <ItemGroup>
     <PackFile Include="resources\files\**" />
+    <PackFile Include="..\LICENSE" />
+    <PackFile Include="..\README.md" />
     <PackFile Include="..\build\$(Configuration)\Win32\ExplorerPatcher.IA-32.dll" Condition="Exists('$(SolutionDir)\build\$(Configuration)\Win32\ExplorerPatcher.IA-32.dll')" />
     <PackFile Include="..\build\$(Configuration)\x64\ExplorerPatcher.amd64.dll" Condition="Exists('$(SolutionDir)\build\$(Configuration)\x64\ExplorerPatcher.amd64.dll')" />
     <PackFile Include="..\build\$(Configuration)\ARM64\ExplorerPatcher.arm64.dll" Condition="Exists('$(SolutionDir)\build\$(Configuration)\ARM64\ExplorerPatcher.arm64.dll')" />

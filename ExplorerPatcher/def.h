@@ -1,3 +1,4 @@
+// Explorer Patcher Plus: modified by noel-digital-fan on 2026-11-19; original notices retained.
 #ifndef _H_DEF_H_
 #define _H_DEF_H_
 #define APPID L"Microsoft.Windows.Explorer"
@@ -7,7 +8,9 @@
 #define SPECIAL_FOLDER CSIDL_PROGRAM_FILES
 #define SPECIAL_FOLDER_LEGACY CSIDL_APPDATA
 #define PRODUCT_NAME "ExplorerPatcher"
-#define PRODUCT_PUBLISHER "VALINET Solutions SRL"
+// Keep PRODUCT_NAME for existing file paths, registry keys and upgrade support.
+#define PRODUCT_DISPLAY_NAME "Explorer Patcher Plus"
+#define PRODUCT_PUBLISHER "noel-digital-fan (Explorer Patcher Plus)"
 #define APP_RELATIVE_PATH "\\" PRODUCT_NAME
 #define EP_CLSID_LITE "D17F1E1A-5919-4427-8F89-A1A8503CA3EB"
 #define EP_CLSID "{D17F1E1A-5919-4427-8F89-A1A8503CA3EB}"
