@@ -1,3 +1,4 @@
+// Explorer Patcher Plus: modified by noel-digital-fan on 2026-11-19; original notices retained.
 #include "utility.h"
 
 #include <string>
