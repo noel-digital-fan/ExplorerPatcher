@@ -8,6 +8,7 @@ $ErrorActionPreference = 'Stop'
 
 function Invoke-Git {
     param([Parameter(ValueFromRemainingArguments = $true)][string[]]$Arguments)
+    Write-Host "git $($Arguments -join ' ')"
     $result = & git @Arguments
     if ($LASTEXITCODE -ne 0) { throw "git $($Arguments -join ' ') failed ($LASTEXITCODE)." }
     return $result
@@ -62,8 +63,8 @@ $branch = Invoke-Git symbolic-ref --short HEAD
 if ($branch -ne $DefaultBranch) { throw "Expected branch $DefaultBranch, found $branch." }
 if (Invoke-Git status --porcelain) { throw 'The checkout must be clean before syncing.' }
 
-Invoke-Git fetch --no-tags https://github.com/valinet/ExplorerPatcher.git "refs/tags/$($upstream.tag_name)"
-$upstreamCommit = Invoke-Git rev-parse 'FETCH_HEAD^{commit}'
+Invoke-Git fetch --no-tags https://github.com/valinet/ExplorerPatcher.git "+refs/tags/$($upstream.tag_name):refs/remotes/upstream/stable-release"
+$upstreamCommit = Invoke-Git rev-parse 'refs/remotes/upstream/stable-release^{commit}'
 
 # A previous upload attempt may already have created this tag. Rebuild that same
 # source, rather than changing an existing release tag to a different commit.
