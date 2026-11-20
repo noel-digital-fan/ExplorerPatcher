@@ -34,10 +34,9 @@ jobs:
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
-        run: >-
-          ./.github/scripts/Sync-UpstreamRelease.ps1
-          -Repository '${{ github.repository }}'
-          -DefaultBranch '${{ github.event.repository.default_branch }}'
+          EP_REPOSITORY: ${{ github.repository }}
+          EP_DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: ./.github/scripts/Sync-UpstreamRelease.ps1 -Repository $env:EP_REPOSITORY -DefaultBranch $env:EP_DEFAULT_BRANCH
 
   # A push made with GITHUB_TOKEN does not start the push-triggered build.
   # Call the build directly, using the exact merged commit, without a PAT.

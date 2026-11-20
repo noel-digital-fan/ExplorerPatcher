@@ -59,7 +59,8 @@ function New-Fixture([string]$Name, [switch]$Conflict) {
     $customCommit = Invoke-TestGit rev-parse HEAD
     Invoke-TestGit clone -q --bare $fork $origin
     Invoke-TestGit remote set-url origin $origin
-    $upstreamUri = ([uri]([IO.Path]::GetFullPath($upstream))).AbsoluteUri
+    $upstreamUri = ([uri]('file:///' + [IO.Path]::GetFullPath($upstream).Replace('\', '/').TrimStart('/'))).AbsoluteUri
+    Assert ($upstreamUri.StartsWith('file:///')) 'test upstream must be an explicit local file URL'
     Invoke-TestGit config "url.$upstreamUri.insteadOf" https://github.com/valinet/ExplorerPatcher.git
     Set-Location $upstream
     if ($Conflict) { Set-Content base.txt 'upstream modification' }
@@ -90,12 +91,7 @@ function Run-Sync($Fixture) {
 
 try {
     $fixture = New-Fixture merge
-    Write-Host "PowerShell $($PSVersionTable.PSVersion), git: $((Get-Command git).Source)"
-    Invoke-TestGit config --get-regexp '^url\.' | Out-Host
-    Invoke-TestGit -C $fixture.Upstream show-ref | Out-Host
-    $env:GIT_TRACE = '1'
     $values = Run-Sync $fixture
-    $env:GIT_TRACE = ''
     Assert ($values.release_required -eq 'true') 'a new stable release requests a build'
     Assert ($values.release_tag -eq 'fork-v1') 'fork tags are separate from official tags'
     Invoke-TestGit merge-base --is-ancestor $fixture.Custom HEAD

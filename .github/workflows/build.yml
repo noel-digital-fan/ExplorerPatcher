@@ -261,6 +261,28 @@ jobs:
             build/Release/ep_setup_arm64.exe
           token: ${{ secrets.PAT }}
 
+      - name: Create or verify the immutable fork release tag
+        if: github.repository_owner != 'valinet' && env.IS_RELEASE == 'true' && vars.BINARY_REDISTRIBUTION_APPROVED == 'true'
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SOURCE_SHA: ${{ steps.vars.outputs.sha }}
+        run: |
+          $ref = "refs/tags/$env:RELEASE_TAG"
+          git check-ref-format $ref
+          if ($LASTEXITCODE -ne 0) { throw 'Invalid release tag.' }
+          $existing = git ls-remote --refs origin $ref
+          if ($LASTEXITCODE -ne 0) { throw 'Could not inspect existing release tags.' }
+          if ($existing) {
+            $encodedTag = [uri]::EscapeDataString($env:RELEASE_TAG)
+            $commit = gh api "repos/$env:GH_REPO/commits/$encodedTag" --jq '.sha'
+            if ($LASTEXITCODE -ne 0 -or $commit -ne $env:SOURCE_SHA) { throw 'Existing tag points at different source.' }
+          } else {
+            @{ ref = $ref; sha = $env:SOURCE_SHA } | ConvertTo-Json | gh api --method POST "repos/$env:GH_REPO/git/refs" --input -
+            if ($LASTEXITCODE -ne 0) { throw 'Could not create the fork release tag.' }
+          }
+
       - name: Create/update release (forks)
         uses: softprops/action-gh-release@b4309332981a82ec1c5618f44dd2e27cc8bfbfda # v3.0.0
         if: github.repository_owner != 'valinet' && env.IS_RELEASE == 'true' && vars.BINARY_REDISTRIBUTION_APPROVED == 'true'
