@@ -1,4 +1,5 @@
-﻿#include "resources/resource.h"
+﻿// Explorer Patcher Plus: modified by noel-digital-fan on 2026-11-19; original notices retained.
+#include "resources/resource.h"
 #include "winres.h"
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
@@ -20,10 +21,10 @@ BEGIN
     IDS_UPDATES_DLFAILED_T      "Update failed"
     IDS_UPDATES_DLFAILED_B      "The user has cancelled the process or an error has occurred when attempting to install this update."
     IDS_UPDATES_INSTALLEDVER    "Installed version: %d.%d.%d.%d"
-    IDS_UPDATES_PROMPT          "Would you like to install an update for ExplorerPatcher?\n\nDownloaded from:\n%s"
+    IDS_UPDATES_PROMPT          "Would you like to install an update for Explorer Patcher Plus?\n\nDownloaded from:\n%s"
 
     IDS_SYM_DL_T                "Downloading symbols for OS build %s, please wait…"
-    IDS_SYM_DL_B                "This may take several minutes. For now, ExplorerPatcher may have limited and/or broken functionality. Click here to learn more about symbols."
+    IDS_SYM_DL_B                "This may take several minutes. For now, Explorer Patcher Plus may have limited and/or broken functionality. Click here to learn more about symbols."
     IDS_SYM_SUCCESS_T           "Successfully downloaded symbols for OS build %s"
     IDS_SYM_SUCCESS_B           "Please restart File Explorer to restore proper functionality."
     IDS_SYM_FAILEDSOME_T        "Downloaded some symbols for OS build %s"
@@ -32,7 +33,7 @@ BEGIN
     IDS_SYM_FAILEDALL_B         "No symbols could be downloaded for this build. This may be due to the current OS build being too recent or the Internet connection being unavailable or unstable."
 
     IDS_CRASH_TITLE             "Unfortunately, File Explorer is crashing :("
-    IDS_CRASH_BODY              "It seems that File Explorer closed unexpectedly %1$s in less than %2$d seconds each time when starting up. This might indicate a problem caused by ExplorerPatcher, which might be unaware of recent changes in Windows, for example when running on a new OS build.\nHere are a few recommendations:\n• If an updated version is available, you can <A HREF=""%3$s"">update ExplorerPatcher and restart File Explorer</A>.\n• On GitHub, you can <A HREF=""%4$s"">view releases</A>, <A HREF=""%5$s"">check the current status</A>, <A HREF=""%6$s"">discuss</A> or <A HREF=""%7$s"">review the latest issues</A>.\n• If you suspect this is not caused by ExplorerPatcher, please uninstall any recently installed shell extensions or similar utilities.\n• If no fix is available for the time being, you can <A HREF=""%8$s"">uninstall ExplorerPatcher</A>, and then later reinstall it when a fix is published on GitHub. Rest assured, even if you uninstall, your program configuration will be preserved.\n\nI am sorry for the inconvenience this might cause; I am doing my best to try to keep this program updated and working.\n\nExplorerPatcher is disabled until the next File Explorer restart, in order to allow you to perform maintenance tasks and take the necessary actions."
+    IDS_CRASH_BODY              "It seems that File Explorer closed unexpectedly %1$s in less than %2$d seconds each time when starting up. This might indicate a problem caused by Explorer Patcher Plus, which might be unaware of recent changes in Windows, for example when running on a new OS build.\nHere are a few recommendations:\n• If an updated version is available, you can <A HREF=""%3$s"">update Explorer Patcher Plus and restart File Explorer</A>.\n• On GitHub, you can <A HREF=""%4$s"">view releases</A>, <A HREF=""%5$s"">check the current status</A>, <A HREF=""%6$s"">discuss</A> or <A HREF=""%7$s"">review the latest issues</A>.\n• If you suspect this is not caused by Explorer Patcher Plus, please uninstall any recently installed shell extensions or similar utilities.\n• If no fix is available for the time being, you can <A HREF=""%8$s"">uninstall Explorer Patcher Plus</A>, and then later reinstall it when a fix is published on GitHub. Rest assured, even if you uninstall, your program configuration will be preserved.\n\nI am sorry for the inconvenience this might cause; I am doing my best to try to keep this program updated and working.\n\nExplorer Patcher Plus is disabled until the next File Explorer restart, in order to allow you to perform maintenance tasks and take the necessary actions."
     IDS_CRASH_ONCE              "once"
     IDS_CRASH_MULTIPLE          "%d times"
     IDS_CRASH_DISMISS           "Dismiss"
@@ -428,7 +429,7 @@ BEGIN
     IDS_MAINTENANCE             "Settings and uninstall"
 
     IDS_UNINSTALL               "Uninstall"
-    IDS_UNINSTALL_UNINSTALL     "Uninstall ExplorerPatcher"
+    IDS_UNINSTALL_UNINSTALL     "Uninstall Explorer Patcher Plus"
 
     IDS_FOOTER_RESTART          "Restart File Explorer"
 END
