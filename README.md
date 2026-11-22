@@ -1,4 +1,5 @@
 <!-- Explorer Patcher Plus: modified by noel-digital-fan on 2026-11-19. -->
+<!-- Modified 2026-11-21: document source validation independent of binary publication. -->
 # Explorer Patcher Plus
 
 Explorer Patcher Plus is a free, unofficial fork of [ExplorerPatcher](https://github.com/valinet/ExplorerPatcher), maintained by [noel-digital-fan](https://github.com/noel-digital-fan). It combines ExplorerPatcher's Windows customization features with additional work on the Windows 10 taskbar search experience on Windows 11.
@@ -53,6 +54,8 @@ The [Build workflow](.github/workflows/build.yml) records the toolchain, depende
 
 If you have a locally built installer, use `ep_setup.exe` for Intel/AMD x64 or `ep_setup_arm64.exe` for ARM64. Installation requests administrator access and restarts File Explorer. Right-click the taskbar and select **Properties** to configure the program. Some features depend on your Windows version.
 
+For a personal x64 installation, the repository owner can prepare an unpublished draft with a `personal-install-` tag targeting an exact source commit, then run the Build workflow with that commit and the draft's numeric `personal_release_id`. This stages an installer in the existing draft for authenticated download; it does not publish the draft or enable public releases or CI binary artifacts. Delete the temporary draft after downloading. Drafts are visible to repository users with write access, so check repository access before using this route.
+
 To uninstall, use **Properties â†’ Uninstall**, Windows **Installed apps**, or run the locally built installer with `/uninstall`. This fork upgrades the existing ExplorerPatcher installation rather than installing alongside it.
 
 ## Updates from this repository
@@ -66,6 +69,8 @@ Once binary distribution is permitted and a fork release exists, **Properties â†
 The [Sync official stable release workflow](.github/workflows/sync-upstream.yml) checks hourly, at minute 23. GitHub may delay scheduled runs and disables schedules in public repositories after 60 days without activity; check Actions if syncing stops. It can also be run manually from Actions.
 
 The workflow fetches the latest **published stable release tag** from `valinet/ExplorerPatcher` and merges that exact commit into this fork's default branch. It does not follow every new commit or prerelease. Your custom commits are retained, including any newer upstream commits intentionally merged earlier. If a conflict or concurrent push occurs, the job fails without force-pushing; resolve the conflict and rerun it.
+
+When a sync changes this fork's source, the workflow runs the Windows build and automation checks even while binary publication is disabled. Scheduled checks with no source changes do not rebuild the same unpublished version every hour. Run the sync workflow manually to retry validation of the current source. These checks do not publish installers or downloadable binary artifacts while the redistribution setting remains disabled.
 
 The future installer-release path is prepared behind the repository variable `BINARY_REDISTRIBUTION_APPROVED`. It remains disabled unless that variable is exactly `true`. Do not enable it until the bundled-component permissions and source obligations have been resolved. When enabled, the workflow calls the build directly with the exact fork commit, stages both installers and a source archive, and publishes a `fork-<official-tag>` release only after all assets are present. Failed builds and incomplete draft releases are retried. Existing release tags keep their original source commit.
 
