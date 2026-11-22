@@ -21,6 +21,7 @@ jobs:
     outputs:
       release_required: ${{ steps.sync.outputs.release_required }}
       source_changed: ${{ steps.sync.outputs.source_changed }}
+      validation_ref: ${{ steps.sync.outputs.validation_ref }}
       ref: ${{ steps.sync.outputs.ref }}
       release_tag: ${{ steps.sync.outputs.release_tag }}
       upstream_release_url: ${{ steps.sync.outputs.upstream_release_url }}
@@ -48,7 +49,7 @@ jobs:
     if: vars.BINARY_REDISTRIBUTION_APPROVED != 'true' && (needs.sync.outputs.source_changed == 'true' || github.event_name == 'workflow_dispatch')
     uses: ./.github/workflows/build.yml
     with:
-      ref: ${{ needs.sync.outputs.source_changed == 'true' && needs.sync.outputs.ref || github.sha }}
+      ref: ${{ needs.sync.outputs.validation_ref || github.sha }}
 
   release:
     needs: sync
