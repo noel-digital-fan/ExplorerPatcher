@@ -1,4 +1,5 @@
 # Explorer Patcher Plus release synchronization, noel-digital-fan, 2026-11-19.
+# Modified 2026-11-21: report source changes independently of publication.
 param(
     [Parameter(Mandatory = $true)][string]$Repository,
     [Parameter(Mandatory = $true)][string]$DefaultBranch
@@ -35,6 +36,7 @@ function Write-Summary([string]$Message) {
 
 if (!$env:GITHUB_OUTPUT) { throw 'GITHUB_OUTPUT is required.' }
 Write-OutputValue release_required false
+Write-OutputValue source_changed false
 
 # /latest excludes drafts and prereleases. Never merge the moving master branch.
 $upstream = Invoke-GitHub api repos/valinet/ExplorerPatcher/releases/latest
@@ -62,6 +64,7 @@ if ($published) {
 $branch = Invoke-Git symbolic-ref --short HEAD
 if ($branch -ne $DefaultBranch) { throw "Expected branch $DefaultBranch, found $branch." }
 if (Invoke-Git status --porcelain) { throw 'The checkout must be clean before syncing.' }
+$initialCommit = Invoke-Git rev-parse HEAD
 
 Invoke-Git fetch --no-tags https://github.com/valinet/ExplorerPatcher.git "+refs/tags/$($upstream.tag_name):refs/remotes/upstream/stable-release"
 $upstreamCommit = Invoke-Git rev-parse 'refs/remotes/upstream/stable-release^{commit}'
@@ -88,6 +91,9 @@ else {
     $sourceCommit = Invoke-Git rev-parse HEAD
     # No force push: concurrent user changes must cause a failure and a fresh retry.
     Invoke-Git push origin "HEAD:refs/heads/$DefaultBranch"
+    if ($sourceCommit -ne $initialCommit) {
+        Write-OutputValue source_changed true
+    }
 }
 
 Write-OutputValue ref $sourceCommit

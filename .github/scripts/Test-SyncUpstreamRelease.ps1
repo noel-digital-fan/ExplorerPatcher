@@ -1,4 +1,5 @@
 # Explorer Patcher Plus release automation tests, noel-digital-fan, 2026-11-19.
+# Modified 2026-11-21: cover validation triggers for changed and unchanged source.
 # Runs real merges and pushes against disposable local Git repositories only.
 $ErrorActionPreference = 'Stop'
 $syncScript = Join-Path $PSScriptRoot 'Sync-UpstreamRelease.ps1'
@@ -93,6 +94,7 @@ try {
     $fixture = New-Fixture merge
     $values = Run-Sync $fixture
     Assert ($values.release_required -eq 'true') 'a new stable release requests a build'
+    Assert ($values.source_changed -eq 'true') 'a successful merge requests source validation'
     Assert ($values.release_tag -eq 'fork-v1') 'fork tags are separate from official tags'
     Invoke-TestGit merge-base --is-ancestor $fixture.Custom HEAD
     Invoke-TestGit merge-base --is-ancestor $fixture.Release HEAD
@@ -102,9 +104,15 @@ try {
     Assert ((Invoke-TestGit --git-dir=$($fixture.Origin) rev-parse master) -eq $values.ref) 'the merged source was pushed'
     Write-Host 'PASS: stable tag merge preserves custom commits and excludes unreleased master'
 
+    $values = Run-Sync $fixture
+    Assert ($values.release_required -eq 'true') 'unpublished releases remain eligible for later publication'
+    Assert ($values.source_changed -eq 'false') 'unchanged scheduled checks must not repeatedly build unpublished source'
+    Write-Host 'PASS: unchanged source is not repeatedly built while publication is disabled'
+
     Invoke-TestGit tag fork-v1
     $values = Run-Sync $fixture
     Assert ($values.ref -eq (Invoke-TestGit rev-parse 'fork-v1^{commit}')) 'a retry uses the existing tag source'
+    Assert ($values.source_changed -eq 'false') 'retrying an existing tag does not change the default branch'
     Write-Host 'PASS: failed publication retries the original tagged source'
 
     $global:EpSyncTestReleases = '[[{"tag_name":"fork-v1","draft":true,"prerelease":false,"assets":[]}]]'
@@ -121,6 +129,7 @@ try {
     $global:EpSyncTestReleases = '[[],[{"tag_name":"fork-v1","draft":false,"prerelease":false,"assets":[{"name":"ep_setup.exe","size":100},{"name":"ep_setup_arm64.exe","size":100},{"name":"Explorer-Patcher-Plus-source.zip","size":100}]}]]'
     $values = Run-Sync $fixture
     Assert ($values.release_required -eq 'false') 'a complete published release is idempotent'
+    Assert ($values.source_changed -eq 'false') 'a completed release does not request another source validation'
     Write-Host 'PASS: already published release is skipped across API pages'
     $global:EpSyncTestReleases = '[[]]'
 
@@ -147,6 +156,7 @@ try {
     $ahead = Invoke-TestGit rev-parse HEAD
     $values = Run-Sync $fixture
     Assert ($values.ref -eq $ahead) 'an intentionally newer fork is never reset to an older stable release'
+    Assert ($values.source_changed -eq 'false') 'a fork already ahead of stable does not report a new merge'
     Assert (Test-Path unreleased.txt) 'newer commits already in the fork are retained'
     Write-Host 'PASS: bootstrap preserves a fork already ahead of stable'
 

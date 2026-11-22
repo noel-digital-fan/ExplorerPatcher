@@ -1,4 +1,5 @@
 # Explorer Patcher Plus: modified by noel-digital-fan on 2026-11-19; original notices retained.
+# Modified 2026-11-21: validate synced source while binary publication is disabled.
 name: Sync official stable release
 
 on:
@@ -19,6 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       release_required: ${{ steps.sync.outputs.release_required }}
+      source_changed: ${{ steps.sync.outputs.source_changed }}
       ref: ${{ steps.sync.outputs.ref }}
       release_tag: ${{ steps.sync.outputs.release_tag }}
       upstream_release_url: ${{ steps.sync.outputs.upstream_release_url }}
@@ -39,7 +41,15 @@ jobs:
         run: ./.github/scripts/Sync-UpstreamRelease.ps1 -Repository $env:EP_REPOSITORY -DefaultBranch $env:EP_DEFAULT_BRANCH
 
   # A push made with GITHUB_TOKEN does not start the push-triggered build.
-  # Call the build directly, using the exact merged commit, without a PAT.
+  # Validate new source even while binary publication is disabled. Manual runs
+  # also allow retrying validation; unchanged scheduled checks do not rebuild.
+  validate:
+    needs: sync
+    if: vars.BINARY_REDISTRIBUTION_APPROVED != 'true' && (needs.sync.outputs.source_changed == 'true' || github.event_name == 'workflow_dispatch')
+    uses: ./.github/workflows/build.yml
+    with:
+      ref: ${{ needs.sync.outputs.source_changed == 'true' && needs.sync.outputs.ref || github.sha }}
+
   release:
     needs: sync
     if: needs.sync.outputs.release_required == 'true' && vars.BINARY_REDISTRIBUTION_APPROVED == 'true'

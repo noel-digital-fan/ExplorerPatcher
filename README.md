@@ -1,4 +1,5 @@
 <!-- Explorer Patcher Plus: modified by noel-digital-fan on 2026-11-19. -->
+<!-- Modified 2026-11-21: document source validation independent of binary publication. -->
 # Explorer Patcher Plus
 
 Explorer Patcher Plus is a free, unofficial fork of [ExplorerPatcher](https://github.com/valinet/ExplorerPatcher), maintained by [noel-digital-fan](https://github.com/noel-digital-fan). It combines ExplorerPatcher's Windows customization features with additional work on the Windows 10 taskbar search experience on Windows 11.
@@ -66,6 +67,8 @@ Once binary distribution is permitted and a fork release exists, **Properties â†
 The [Sync official stable release workflow](.github/workflows/sync-upstream.yml) checks hourly, at minute 23. GitHub may delay scheduled runs and disables schedules in public repositories after 60 days without activity; check Actions if syncing stops. It can also be run manually from Actions.
 
 The workflow fetches the latest **published stable release tag** from `valinet/ExplorerPatcher` and merges that exact commit into this fork's default branch. It does not follow every new commit or prerelease. Your custom commits are retained, including any newer upstream commits intentionally merged earlier. If a conflict or concurrent push occurs, the job fails without force-pushing; resolve the conflict and rerun it.
+
+When a sync changes this fork's source, the workflow runs the Windows build and automation checks even while binary publication is disabled. Scheduled checks with no source changes do not rebuild the same unpublished version every hour. Run the sync workflow manually to retry validation of the current source. These checks do not publish installers or downloadable binary artifacts while the redistribution setting remains disabled.
 
 The future installer-release path is prepared behind the repository variable `BINARY_REDISTRIBUTION_APPROVED`. It remains disabled unless that variable is exactly `true`. Do not enable it until the bundled-component permissions and source obligations have been resolved. When enabled, the workflow calls the build directly with the exact fork commit, stages both installers and a source archive, and publishes a `fork-<official-tag>` release only after all assets are present. Failed builds and incomplete draft releases are retried. Existing release tags keep their original source commit.
 
