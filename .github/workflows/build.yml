@@ -19,6 +19,10 @@ on:
       config:
         description: 'Configuration'
         required: false
+      personal_release_id:
+        description: 'Existing unpublished personal-install draft ID (owner only; no public release)'
+        required: false
+        default: ''
   workflow_call:
     inputs:
       ref:
@@ -191,6 +195,32 @@ jobs:
         if: env.IS_RELEASE == 'true' && vars.BINARY_REDISTRIBUTION_APPROVED == 'true'
         shell: pwsh
         run: ./.github/scripts/New-SourceArchive.ps1 -Destination build/Release/Explorer-Patcher-Plus-source.zip
+
+      - name: Stage a personal x64 installer in an existing unpublished draft
+        if: github.event_name == 'workflow_dispatch' && github.actor == github.repository_owner && inputs.personal_release_id != ''
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          PERSONAL_RELEASE_ID: ${{ inputs.personal_release_id }}
+          SOURCE_SHA: ${{ steps.vars.outputs.sha }}
+        run: |
+          if ($env:PERSONAL_RELEASE_ID -notmatch '^[0-9]+$') { throw 'Invalid personal draft ID.' }
+          $endpoint = "repos/$env:GH_REPO/releases/$env:PERSONAL_RELEASE_ID"
+          $draft = gh api $endpoint | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0) { throw 'Could not inspect the personal draft.' }
+          if (!$draft.draft -or $draft.published_at -or
+              !$draft.tag_name.StartsWith('personal-install-') -or
+              $draft.target_commitish -ne $env:SOURCE_SHA) {
+            throw 'Personal installers require an existing unpublished personal-install draft targeting this exact source commit.'
+          }
+          gh release upload $draft.tag_name build/Release/x64/ep_setup.exe --repo $env:GH_REPO --clobber
+          if ($LASTEXITCODE -ne 0) { throw 'Could not upload the personal installer.' }
+          $verified = gh api $endpoint | ConvertFrom-Json
+          if ($LASTEXITCODE -ne 0 -or !$verified.draft -or $verified.published_at) {
+            throw 'Personal installer draft privacy check failed.'
+          }
+          Write-Host "Personal installer SHA256: $((Get-FileHash build/Release/x64/ep_setup.exe -Algorithm SHA256).Hash)"
 
       - name: Delete intermediate files
         shell: bash

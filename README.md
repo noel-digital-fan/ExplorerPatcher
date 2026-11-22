@@ -54,6 +54,8 @@ The [Build workflow](.github/workflows/build.yml) records the toolchain, depende
 
 If you have a locally built installer, use `ep_setup.exe` for Intel/AMD x64 or `ep_setup_arm64.exe` for ARM64. Installation requests administrator access and restarts File Explorer. Right-click the taskbar and select **Properties** to configure the program. Some features depend on your Windows version.
 
+For a personal x64 installation, the repository owner can prepare an unpublished draft with a `personal-install-` tag targeting an exact source commit, then run the Build workflow with that commit and the draft's numeric `personal_release_id`. This stages an installer in the existing draft for authenticated download; it does not publish the draft or enable public releases or CI binary artifacts. Delete the temporary draft after downloading. Drafts are visible to repository users with write access, so check repository access before using this route.
+
 To uninstall, use **Properties → Uninstall**, Windows **Installed apps**, or run the locally built installer with `/uninstall`. This fork upgrades the existing ExplorerPatcher installation rather than installing alongside it.
 
 ## Updates from this repository
